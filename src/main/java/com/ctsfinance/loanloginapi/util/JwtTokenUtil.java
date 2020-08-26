@@ -7,8 +7,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
+//import org.springframework.security.core.userdetails.UserDetails;
+//import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -16,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-@Component
+@Configuration
 public class JwtTokenUtil implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenUtil.class);
@@ -65,8 +66,8 @@ public class JwtTokenUtil implements Serializable {
             .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
     //validate token
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
+//    public Boolean validateToken(String token, UserDetails userDetails) {
+//        final String username = getUsernameFromToken(token);
+//        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+//    }
 }

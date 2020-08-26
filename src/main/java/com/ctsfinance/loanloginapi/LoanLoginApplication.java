@@ -23,4 +23,5 @@ public class LoanLoginApplication {
 	public RestTemplate getRestTemplate(){
 		return new RestTemplate();
 	}
+
 }

@@ -1,39 +1,84 @@
 package com.ctsfinance.loanloginapi.controller;
 
 
-import com.ctsfinance.loanloginapi.model.Login;
-import com.ctsfinance.loanloginapi.model.LoginMapper;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.ctsfinance.loanloginapi.model.*;
+import com.ctsfinance.loanloginapi.service.LoginUserDetailsService;
+import com.ctsfinance.loanloginapi.util.JwtTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+
 
 @RestController
-@RequestMapping("/user-authorization")
+@RequestMapping("/login")
 public class LoginController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
 
-    @PostMapping
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    private LoginUserDetailsService loginUserDetailsService;
+
+    @PostMapping("/v1/user-login")
     //@PreAuthorize("hasAuthority('user:read', 'user:write')")
-    @HystrixCommand(fallbackMethod = "getFallbackUserLogin")
-    public ResponseEntity<Login> userLogin(@RequestBody LoginMapper loginMapper){
+    //@HystrixCommand(fallbackMethod = "getFallbackUserLogin")
+    public ResponseEntity<AuthenticationResponse> userLogin(@RequestBody LoginMapper loginMapper) throws Exception{
 
         LOGGER.info("Start userLogin::LoginController");
 
-        Login login = new Login();
+        authenticate(loginMapper.getUsername(), loginMapper.getPassword());
 
-        login.setUserName(loginMapper.getUserName());
-        login.setPassword(loginMapper.getPassword());
+        final Login userDetails = loginUserDetailsService.loadUserByUsername(loginMapper.getUsername());
 
-        return ResponseEntity.ok(login);
+        final String token = jwtTokenUtil.generateToken(userDetails.getUsername());
+
+        LOGGER.info("Start userLogin::LoginController" + userDetails.getUserType());
+
+        return ResponseEntity.ok(new AuthenticationResponse(token, userDetails.getUserType()));
     }
 
-    public ResponseEntity<String> getFallbackUserLogin(@RequestBody Login login){
-        return ResponseEntity.ok("No details found: " + login);
+    @GetMapping("/getUserDetails")
+    //@PreAuthorize("hasAuthority('user:read', 'user:write')")
+    //@HystrixCommand(fallbackMethod = "getFallbackUserLogin")
+    public ResponseEntity<User> getUSerDetails(@Param("username") String username) throws Exception{
+
+        LOGGER.info("Start getUSerDetails::LoginController " + username);
+
+        final Login userDetails = loginUserDetailsService.loadUserByUsername(username);
+
+        LOGGER.info("Start getUSerDetails::LoginController " + userDetails.getUsername());
+
+
+        return ResponseEntity.ok(new User(userDetails.getUsername(), userDetails.getPassword(), new ArrayList<>()));
     }
+
+    private void authenticate(String username, String password) throws Exception {
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+        } catch (DisabledException e) {
+            throw new Exception("USER_DISABLED", e);
+        } catch (BadCredentialsException e) {
+            throw new Exception("INVALID_CREDENTIALS" + e + " user: " + username + " pwd: " + password);
+        }
+    }
+
+//    public ResponseEntity<String> getFallbackUserLogin(@RequestBody Login login){
+//        return ResponseEntity.ok("No details found: " + login);
+//    }
 }

@@ -14,7 +14,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "login")
+@Table(name = "user_login")
 public class Login {
 
     @Id
@@ -23,7 +23,7 @@ public class Login {
 
     @JsonIgnore
     @Column(name = "username")
-    private String userName;
+    private String username;
 
     private String password;
 
