@@ -13,8 +13,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -42,13 +40,11 @@ public class LoginController {
 
         LOGGER.info("Start userLogin::LoginController");
 
-        authenticate(loginMapper.getUsername(), loginMapper.getPassword());
+        //authenticate(loginMapper.getUsername(), loginMapper.getPassword());
 
         final Login userDetails = loginUserDetailsService.loadUserByUsername(loginMapper.getUsername());
 
         final String token = jwtTokenUtil.generateToken(userDetails.getUsername());
-
-        LOGGER.info("Start userLogin::LoginController" + userDetails.getUserType());
 
         return ResponseEntity.ok(new AuthenticationResponse(token, userDetails.getUserType()));
     }
@@ -56,16 +52,13 @@ public class LoginController {
     @GetMapping("/getUserDetails")
     //@PreAuthorize("hasAuthority('user:read', 'user:write')")
     //@HystrixCommand(fallbackMethod = "getFallbackUserLogin")
-    public ResponseEntity<User> getUSerDetails(@Param("username") String username) throws Exception{
+    public ResponseEntity<CustomeUser> getUSerDetails(@Param("username") String username) throws Exception{
 
-        LOGGER.info("Start getUSerDetails::LoginController " + username);
+        LOGGER.info("Start getUSerDetails::LoginController");
 
         final Login userDetails = loginUserDetailsService.loadUserByUsername(username);
 
-        LOGGER.info("Start getUSerDetails::LoginController " + userDetails.getUsername());
-
-
-        return ResponseEntity.ok(new User(userDetails.getUsername(), userDetails.getPassword(), new ArrayList<>()));
+        return ResponseEntity.ok(new CustomeUser(userDetails.getUsername(), userDetails.getPassword(), new ArrayList<>()));
     }
 
     private void authenticate(String username, String password) throws Exception {

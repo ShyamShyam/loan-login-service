@@ -1,5 +1,6 @@
 package com.ctsfinance.loanloginapi.service;
 
+import com.ctsfinance.loanloginapi.exception.ResourceNotFoundException;
 import com.ctsfinance.loanloginapi.model.Login;
 import com.ctsfinance.loanloginapi.repository.LoginRepo;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class LoginUserDetailsService {
         Login dbDetails = loginRepo.findByUsername(username);
 
         if(dbDetails == null)
-            throw new RuntimeException("");//UsernameNotFoundException("No record found");
+            throw new ResourceNotFoundException("No Record found for " + username + " User");
 
         return dbDetails;
     }
